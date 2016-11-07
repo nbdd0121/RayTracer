@@ -230,10 +230,15 @@ public class Renderer {
 				BufferedImage.TYPE_INT_RGB);
 		Camera camera = new Camera(width, height);
 
-		Thread[] threads = new Thread[4];
-		for (int i = 0; i < 4; i++) {
-			int start = i * height / 4 + (i == 0 ? 0 : 1);
-			int end = (i + 1) * height / 4 + 1;
+		// Ray-casting is naturally multi-threaded
+		// we use #core - 2 threads to gain performance
+		int cores = Runtime.getRuntime().availableProcessors();
+		int concLevel = cores - 2 < 1 ? 1 : cores - 2;
+
+		Thread[] threads = new Thread[concLevel];
+		for (int i = 0; i < concLevel; i++) {
+			int start = i * height / concLevel + (i == 0 ? 0 : 1);
+			int end = (i + 1) * height / concLevel + 1;
 			int j = i;
 
 			threads[i] = new Thread(() -> {
@@ -242,7 +247,7 @@ public class Renderer {
 						pixels[y][x] = singleSample(scene, camera, x - 0.5,
 								y - 0.5);
 					}
-					if (j == 3) {
+					if (j == concLevel - 1) {
 						System.out
 								.println("Rendering "
 										+ String.format("%.2f",
@@ -255,15 +260,16 @@ public class Renderer {
 			threads[i].start();
 		}
 
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < concLevel; i++) {
+			// These must start in-order
 			try {
 				threads[i].join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 
-			int start = i * height / 4;
-			int end = (i + 1) * height / 4;
+			int start = i * height / concLevel;
+			int end = (i + 1) * height / concLevel;
 			int j = i;
 
 			threads[i] = new Thread(() -> {
@@ -275,7 +281,7 @@ public class Renderer {
 
 						image.setRGB(x, y, pixel.toRGB());
 					}
-					if (j == 3) {
+					if (j == concLevel - 1) {
 						System.out
 								.println("Supersampling "
 										+ String.format("%.2f",
