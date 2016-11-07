@@ -20,6 +20,8 @@ public class Renderer {
 	private final int MAX_REFLECTION_DEPTH = 5;
 	private final boolean SUPERSAMPLING_DEBUG = false;
 
+	private final boolean DEBUG = false;
+
 	private int width, height;
 
 	public Renderer(int width, int height) {
@@ -234,15 +236,17 @@ public class Renderer {
 		// Ray-casting is naturally multi-threaded
 		// we use #core - 2 threads to gain performance
 		int cores = Runtime.getRuntime().availableProcessors();
-		int concLevel = cores - 2 < 1 ? 1 : cores - 2;
+		int concLevel = DEBUG ? 1 : (cores - 2 < 1 ? 1 : cores - 2);
 
-		Thread[] threads = new Thread[concLevel];
+		// If concurrency level = 1, then we run on main thread
+		// (facilitate profiling)
+		Thread[] threads = concLevel == 1 ? null : new Thread[concLevel];
 		for (int i = 0; i < concLevel; i++) {
 			int start = i * height / concLevel + (i == 0 ? 0 : 1);
 			int end = (i + 1) * height / concLevel + 1;
 			int j = i;
 
-			threads[i] = new Thread(() -> {
+			Runnable r = () -> {
 				for (int y = start; y < end; y++) {
 					for (int x = 0; x <= width; x++) {
 						pixels[y][x] = singleSample(scene, camera, x - 0.5,
@@ -257,23 +261,31 @@ public class Renderer {
 										+ "% complete");
 					}
 				}
-			});
-			threads[i].start();
+			};
+
+			if (concLevel != 1) {
+				threads[i] = new Thread(r);
+				threads[i].start();
+			} else {
+				r.run();
+			}
 		}
 
 		for (int i = 0; i < concLevel; i++) {
-			// These must start in-order
-			try {
-				threads[i].join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			if (concLevel != 1) {
+				// These must start in-order
+				try {
+					threads[i].join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 
 			int start = i * height / concLevel;
 			int end = (i + 1) * height / concLevel;
 			int j = i;
 
-			threads[i] = new Thread(() -> {
+			Runnable r = () -> {
 				for (int y = start; y < end; y++) {
 					for (int x = 0; x < width; x++) {
 						Vector3d pixel = subpixelSample(scene, camera, x, y, 1,
@@ -291,15 +303,22 @@ public class Renderer {
 								+ "% complete");
 					}
 				}
-			});
-			threads[i].start();
+			};
+			if (concLevel != 1) {
+				threads[i] = new Thread(r);
+				threads[i].start();
+			} else {
+				r.run();
+			}
 		}
 
-		for (Thread t : threads) {
-			try {
-				t.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+		if (concLevel != 1) {
+			for (Thread t : threads) {
+				try {
+					t.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 
