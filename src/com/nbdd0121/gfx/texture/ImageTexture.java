@@ -2,6 +2,7 @@ package com.nbdd0121.gfx.texture;
 
 import java.awt.image.BufferedImage;
 
+import com.nbdd0121.gfx.math.MathUtil;
 import com.nbdd0121.gfx.math.Vector3d;
 
 public class ImageTexture extends Texture {
@@ -14,12 +15,10 @@ public class ImageTexture extends Texture {
 
 	@Override
 	public Vector3d getColor(double u, double v) {
-		int x = (int) (u * img.getWidth());
-		if (x >= img.getWidth())
-			x = img.getWidth() - 1;
-		int y = (int) ((1 - v) * img.getHeight());
-		if (y >= img.getHeight())
-			y = img.getHeight() - 1;
+		int x = MathUtil.clamp((int) (u * img.getWidth()), 0,
+				img.getWidth() - 1);
+		int y = MathUtil.clamp((int) ((1 - v) * img.getHeight()), 0,
+				img.getHeight() - 1);
 		int rgb = img.getRGB(x, y);
 		int r = (rgb >> 16) & 0xFF;
 		int g = (rgb >> 8) & 0xFF;

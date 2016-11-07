@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import com.nbdd0121.gfx.math.Vector2d;
 import com.nbdd0121.gfx.math.Vector3d;
 import com.nbdd0121.gfx.shape.MeshTriangle;
 import com.nbdd0121.gfx.shape.Shape;
@@ -15,8 +16,8 @@ public class ObjParser {
 
 	private ArrayList<Vector3d> vertices;
 	private ArrayList<Vector3d> normals;
-	private ArrayList<Vector3d> textures;
-	private Vector3d offset; 
+	private ArrayList<Vector2d> textures;
+	private Vector3d offset;
 	private ShapeGroup faces = new ShapeGroup();
 
 	private ObjParser() {
@@ -44,7 +45,8 @@ public class ObjParser {
 	}
 
 	private void processVt(String arg) {
-		textures.add(parseTuple(arg));
+		Vector3d vec = parseTuple(arg);
+		textures.add(new Vector2d(vec.x, vec.y));
 	}
 
 	private void processF(String arg) {
@@ -70,25 +72,36 @@ public class ObjParser {
 			return;
 		}
 
-		// Have texture but no normal, for now we ignore textures
-		if (s0.length == 2) {
-			faces.add(new Triangle(vertices.get(id0), vertices.get(id1),
-					vertices.get(id2)));
-			return;
+		// Get texture vertices
+		int t0 = 0;
+		int t1 = 0;
+		int t2 = 0;
+		if (!s0[1].isEmpty()) {
+			t0 = Integer.parseInt(s0[1]);
+			t1 = Integer.parseInt(s1[1]);
+			t2 = Integer.parseInt(s2[1]);
 		}
 
-		// With normals, for now we ignore textures
-		int n0 = Integer.parseInt(s0[2]);
-		int n1 = Integer.parseInt(s1[2]);
-		int n2 = Integer.parseInt(s2[2]);
+		// Get normal vertices
+		int n0 = 0;
+		int n1 = 0;
+		int n2 = 0;
+		if (s0.length >= 3) {
+			n0 = Integer.parseInt(s0[2]);
+			n1 = Integer.parseInt(s1[2]);
+			n2 = Integer.parseInt(s2[2]);
+		}
+
 		faces.add(new MeshTriangle(vertices.get(id0), vertices.get(id1),
 				vertices.get(id2), normals.get(n0), normals.get(n1),
-				normals.get(n2)));
+				normals.get(n2), textures.get(t0), textures.get(t1),
+				textures.get(t2)));
 	}
 
-	public static Shape parse(String file, Vector3d offset) throws FileNotFoundException {
+	public static Shape parse(String file, Vector3d offset)
+			throws FileNotFoundException {
 		ObjParser parser = new ObjParser();
-		
+
 		// TODO: Make me matrix transformation
 		parser.offset = offset;
 

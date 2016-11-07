@@ -13,6 +13,7 @@ public class ShapeGroup extends Shape {
 
 	private List<Shape> shape;
 	private BoundingBox box;
+	private boolean topmost = true;
 
 	public ShapeGroup() {
 		shape = new ArrayList<>();
@@ -104,6 +105,8 @@ public class ShapeGroup extends Shape {
 
 		// If we've successfully separate thing apart
 		if (l.shape.size() != shape.size() && r.shape.size() != shape.size()) {
+			l.topmost = false;
+			r.topmost = false;
 			l.build();
 			r.build();
 			shape.clear();
@@ -130,8 +133,11 @@ public class ShapeGroup extends Shape {
 		if (ret == null)
 			return null;
 
-		return new RaycastHit(this, ret.getDistance(), ret.getLocation(),
-				ret.getNormal());
+		// Lazy set material
+		// TODO: We don't need this after we implement material in obj parser
+		if (topmost)
+			ret.getObjectHit().setMaterial(getMaterial());
+		return ret;
 	}
 
 	@Override

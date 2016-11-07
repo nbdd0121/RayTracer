@@ -10,8 +10,8 @@ import com.nbdd0121.gfx.math.Vector3d;
 public class Triangle extends Shape {
 
 	protected Vector3d a, b, c;
+	protected Vector3d normal;
 	private Vector3d ab, ac;
-	private Vector3d normal;
 	private BoundingBox box;
 
 	public Triangle(Vector3d a, Vector3d b, Vector3d c) {
@@ -86,8 +86,7 @@ public class Triangle extends Shape {
 		}
 	}
 
-	@Override
-	public Vector2d getUVMapping(Vector3d point) {
+	protected Vector3d barycentric(Vector3d point) {
 		Vector3d pa = a.subtract(point);
 		Vector3d pb = b.subtract(point);
 		Vector3d pc = c.subtract(point);
@@ -97,8 +96,12 @@ public class Triangle extends Shape {
 		double kb = pc.cross(pa).magnitude() * invK;
 		double kc = pa.cross(pb).magnitude() * invK;
 
-		return Vector2d.ZERO.scale(ka).add(Vector2d.ONE.scale(kc))
-				.add(new Vector2d(0, 1).scale(kb));
+		return new Vector3d(ka, kb, kc);
+	}
+
+	@Override
+	public Vector2d getUVMapping(Vector3d point) {
+		return new Vector2d(0, 0);
 	}
 
 }

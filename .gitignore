@@ -2,6 +2,10 @@
 /.project
 *.class
 
+# Object files
 *.obj
+*.3ds
+
+# Texture files
 *.png
 *.jpg
