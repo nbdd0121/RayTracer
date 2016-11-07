@@ -18,10 +18,6 @@ public class Vector3d {
 		this.z = z;
 	}
 
-	private static int convertToByte(double value) {
-		return (int) (255 * Math.max(0, Math.min(1, value)));
-	}
-
 	public Vector3d add(Vector3d other) {
 		return new Vector3d(x + other.x, y + other.y, z + other.z);
 	}
@@ -72,11 +68,6 @@ public class Vector3d {
 	public Vector3d normalize() {
 		double magnitude = this.magnitude();
 		return new Vector3d(x / magnitude, y / magnitude, z / magnitude);
-	}
-
-	public int toRGB() {
-		return convertToByte(x) << 16 | convertToByte(y) << 8
-				| convertToByte(z) << 0;
 	}
 
 	public boolean equals(Vector3d other) {

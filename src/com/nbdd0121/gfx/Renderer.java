@@ -2,6 +2,7 @@ package com.nbdd0121.gfx;
 
 import java.awt.image.BufferedImage;
 
+import com.nbdd0121.gfx.math.ColorUtil;
 import com.nbdd0121.gfx.math.Vector2d;
 import com.nbdd0121.gfx.math.Vector3d;
 import com.nbdd0121.gfx.shape.Shape;
@@ -279,7 +280,7 @@ public class Renderer {
 								pixels[y][x], pixels[y][x + 1],
 								pixels[y + 1][x], pixels[y + 1][x + 1]);
 
-						image.setRGB(x, y, pixel.toRGB());
+						image.setRGB(x, y, ColorUtil.toRGB(pixel));
 					}
 					if (j == concLevel - 1) {
 						System.out
