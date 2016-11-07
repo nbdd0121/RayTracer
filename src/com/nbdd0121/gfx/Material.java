@@ -36,6 +36,8 @@ public class Material {
 		wood.specularIndex = 0;
 		wood.texture = new Wood();
 		
+		mirror.diffuseIndex = 0.1;
+		mirror.specularIndex = 0.2;
 		mirror.reflectionIndex = 0.8;
 		
 		test.specularIndex = 0;
