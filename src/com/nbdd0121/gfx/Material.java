@@ -13,7 +13,6 @@ public class Material {
 	private static final Material china = new Material();
 	private static final Material wood = new Material();
 	private static final Material mirror = new Material();
-	private static final Material test = new Material();
 
 	static {
 		air.diffuseIndex = 0;
@@ -39,9 +38,6 @@ public class Material {
 		mirror.diffuseIndex = 0.1;
 		mirror.specularIndex = 0.2;
 		mirror.reflectionIndex = 0.8;
-		
-		test.specularIndex = 0;
-		test.refractionIndex = -1;
 	}
 
 	public Vector3d specularColor = Vector3d.ONE;
@@ -82,8 +78,6 @@ public class Material {
 				return new Material(wood);
 			case "mirror":
 				return new Material(mirror);
-			case "test":
-				return new Material(test);
 			default:
 				return null;
 		}
