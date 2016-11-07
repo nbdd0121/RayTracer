@@ -9,7 +9,7 @@ import com.nbdd0121.gfx.math.Vector3d;
 
 public class Triangle extends Shape {
 
-	private Vector3d a, b, c;
+	protected Vector3d a, b, c;
 	private Vector3d ab, ac;
 	private Vector3d normal;
 	private BoundingBox box;
@@ -77,7 +77,9 @@ public class Triangle extends Shape {
 		double t = ac.dot(Q) * invDet;
 
 		if (t > 0.00001 && t < maxDistance) {
-			return new RaycastHit(this, t, ray.evaluateAt(t),
+			Vector3d point = ray.evaluateAt(t);
+			Vector3d normal = getNormalAt(point);
+			return new RaycastHit(this, t, point,
 					det > 0 ? normal : normal.negate());
 		} else {
 			return null;
