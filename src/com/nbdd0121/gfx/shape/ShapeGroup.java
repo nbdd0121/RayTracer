@@ -129,6 +129,7 @@ public class ShapeGroup extends Shape {
 		}
 		if (ret == null)
 			return null;
+
 		return new RaycastHit(this, ret.getDistance(), ret.getLocation(),
 				ret.getNormal());
 	}

@@ -12,15 +12,86 @@ import com.nbdd0121.gfx.shape.ShapeGroup;
 import com.nbdd0121.gfx.shape.Triangle;
 
 public class ObjParser {
-	
-	public static Shape parse(String file) throws FileNotFoundException {
-		ArrayList<Vector3d> vertexes = new ArrayList<>();
-		ArrayList<Vector3d> normals = new ArrayList<>();
-		
-		vertexes.add(null);
+
+	private ArrayList<Vector3d> vertices;
+	private ArrayList<Vector3d> normals;
+	private ArrayList<Vector3d> textures;
+	private Vector3d offset; 
+	private ShapeGroup faces = new ShapeGroup();
+
+	private ObjParser() {
+		vertices = new ArrayList<>();
+		normals = new ArrayList<>();
+		textures = new ArrayList<>();
+
+		vertices.add(null);
 		normals.add(null);
+		textures.add(null);
+	}
+
+	private Vector3d parseTuple(String str) {
+		String[] split = str.split(" ");
+		return new Vector3d(Double.parseDouble(split[0]),
+				Double.parseDouble(split[1]), Double.parseDouble(split[2]));
+	}
+
+	private void processV(String arg) {
+		vertices.add(parseTuple(arg).add(offset));
+	}
+
+	private void processVn(String arg) {
+		normals.add(parseTuple(arg));
+	}
+
+	private void processVt(String arg) {
+		textures.add(parseTuple(arg));
+	}
+
+	private void processF(String arg) {
+		String[] split = arg.split(" ");
+
+		if (split.length != 3) {
+			throw new UnsupportedOperationException();
+		}
+
+		// TODO: Deal with more than 3 vertices
+		String[] s0 = split[0].split("/");
+		String[] s1 = split[1].split("/");
+		String[] s2 = split[2].split("/");
+
+		int id0 = Integer.parseInt(s0[0]);
+		int id1 = Integer.parseInt(s1[0]);
+		int id2 = Integer.parseInt(s2[0]);
+
+		// For now assume all vertices have same format
+		if (s0.length == 1) {
+			faces.add(new Triangle(vertices.get(id0), vertices.get(id1),
+					vertices.get(id2)));
+			return;
+		}
+
+		// Have texture but no normal, for now we ignore textures
+		if (s0.length == 2) {
+			faces.add(new Triangle(vertices.get(id0), vertices.get(id1),
+					vertices.get(id2)));
+			return;
+		}
+
+		// With normals, for now we ignore textures
+		int n0 = Integer.parseInt(s0[2]);
+		int n1 = Integer.parseInt(s1[2]);
+		int n2 = Integer.parseInt(s2[2]);
+		faces.add(new MeshTriangle(vertices.get(id0), vertices.get(id1),
+				vertices.get(id2), normals.get(n0), normals.get(n1),
+				normals.get(n2)));
+	}
+
+	public static Shape parse(String file, Vector3d offset) throws FileNotFoundException {
+		ObjParser parser = new ObjParser();
 		
-		ShapeGroup faces = new ShapeGroup();
+		// TODO: Make me matrix transformation
+		parser.offset = offset;
+
 		Scanner scanner = new Scanner(new FileInputStream(file));
 
 		while (scanner.hasNextLine()) {
@@ -32,38 +103,22 @@ public class ObjParser {
 			}
 
 			if (line.startsWith("v ")) {
-				String[] vertex = line.substring(2).trim().split(" ");
-				Vector3d v = new Vector3d(Double.parseDouble(vertex[0]),
-						Double.parseDouble(vertex[1]),
-						Double.parseDouble(vertex[2]));
-				vertexes.add(v.add(new Vector3d(-0.2, -1, 5)));
-			}else if (line.startsWith("vn ")) {
-				String[] vertex = line.substring(2).trim().split(" ");
-				Vector3d v = new Vector3d(Double.parseDouble(vertex[0]),
-						Double.parseDouble(vertex[1]),
-						Double.parseDouble(vertex[2]));
-				normals.add(v.normalize());
+				parser.processV(line.substring(2).trim());
+			} else if (line.startsWith("vn ")) {
+				parser.processVn(line.substring(3).trim());
+			} else if (line.startsWith("vt ")) {
+				parser.processVt(line.substring(3).trim());
 			} else if (line.startsWith("f ")) {
-				String[] vertex = line.substring(2).trim().split(" ");
-				int id0 = Integer.parseInt(vertex[0].split("/")[0]);
-				int id1 = Integer.parseInt(vertex[1].split("/")[0]);
-				int id2 = Integer.parseInt(vertex[2].split("/")[0]);
-				
-				int n0 = Integer.parseInt(vertex[0].split("/")[2]);
-				int n1 = Integer.parseInt(vertex[1].split("/")[2]);
-				int n2 = Integer.parseInt(vertex[2].split("/")[2]);
-				faces.add(new MeshTriangle(vertexes.get(id0), vertexes.get(id1),
-						vertexes.get(id2),normals.get(n0), normals.get(n1),
-						normals.get(n2)));
+				parser.processF(line.substring(2).trim());
 			} else {
 				// Other directive are not supported yet!
 			}
 		}
-		
+
 		scanner.close();
-		
-		faces.build();
-		return faces;
+
+		parser.faces.build();
+		return parser.faces;
 	}
 
 }

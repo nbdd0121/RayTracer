@@ -76,9 +76,10 @@ public class SceneLoader {
 					break;
 				}
 				case "model": {
+					Vector3d pos = getPosition(element);
 					Shape s;
 					try {
-						s = ObjParser.parse(getString(element, "obj"));
+						s = ObjParser.parse(getString(element, "obj"), pos);
 					} catch (FileNotFoundException e) {
 						e.printStackTrace();
 						s = null;
