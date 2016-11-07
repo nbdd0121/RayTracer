@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import com.nbdd0121.gfx.math.Matrix4d;
 import com.nbdd0121.gfx.math.Vector2d;
 import com.nbdd0121.gfx.math.Vector3d;
 import com.nbdd0121.gfx.shape.MeshTriangle;
@@ -17,7 +18,8 @@ public class ObjParser {
 	private ArrayList<Vector3d> vertices;
 	private ArrayList<Vector3d> normals;
 	private ArrayList<Vector2d> textures;
-	private Vector3d offset;
+	private Matrix4d transform;
+	private Matrix4d normalTransform;
 	private ShapeGroup faces = new ShapeGroup();
 
 	private ObjParser() {
@@ -37,11 +39,11 @@ public class ObjParser {
 	}
 
 	private void processV(String arg) {
-		vertices.add(parseTuple(arg).add(offset));
+		vertices.add(transform.multiply(parseTuple(arg)).asVector3d());
 	}
 
 	private void processVn(String arg) {
-		normals.add(parseTuple(arg));
+		normals.add(normalTransform.multiply(parseTuple(arg)).asVector3d());
 	}
 
 	private void processVt(String arg) {
@@ -98,12 +100,12 @@ public class ObjParser {
 				textures.get(t2)));
 	}
 
-	public static Shape parse(String file, Vector3d offset)
+	public static Shape parse(String file, Matrix4d transform)
 			throws FileNotFoundException {
 		ObjParser parser = new ObjParser();
 
-		// TODO: Make me matrix transformation
-		parser.offset = offset;
+		parser.transform = transform;
+		parser.normalTransform = transform.inverse().transpose();
 
 		Scanner scanner = new Scanner(new FileInputStream(file));
 

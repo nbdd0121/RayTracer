@@ -27,7 +27,7 @@ public class MeshTriangle extends Triangle {
 
 		Vector3d coord = barycentric(point);
 		return aNormal.scale(coord.x).add(bNormal.scale(coord.y))
-				.add(cNormal.scale(coord.z));
+				.add(cNormal.scale(coord.z)).normalize();
 	}
 
 	@Override

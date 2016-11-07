@@ -86,4 +86,9 @@ public class Vector4d {
 	public String toString() {
 		return "Vector(" + x + ", " + y + ", " + z + ", " + w + ")";
 	}
+
+	public Vector3d asVector3d() {
+		double invW = 1 / w;
+		return new Vector3d(x * invW, y * invW, z * invW);
+	}
 }

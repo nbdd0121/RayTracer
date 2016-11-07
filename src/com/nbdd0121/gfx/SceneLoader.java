@@ -12,6 +12,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.nbdd0121.gfx.math.Transformation;
 import com.nbdd0121.gfx.math.Vector3d;
 import com.nbdd0121.gfx.model.ObjParser;
 import com.nbdd0121.gfx.shape.Plane;
@@ -67,9 +68,9 @@ public class SceneLoader {
 					break;
 				}
 				case "triangle": {
-					Vector3d a = getVector(element, "a");
-					Vector3d b = getVector(element, "b");
-					Vector3d c = getVector(element, "c");
+					Vector3d a = getVector(element, "a", null);
+					Vector3d b = getVector(element, "b", null);
+					Vector3d c = getVector(element, "c", null);
 					Triangle tri = new Triangle(a, b, c);
 					tri.setMaterial(getMaterial(element));
 					scene.addObject(tri);
@@ -77,9 +78,17 @@ public class SceneLoader {
 				}
 				case "model": {
 					Vector3d pos = getPosition(element);
+					Vector3d scale = getVector(element, "scale", Vector3d.ONE);
+					double rotate = getDouble(element, "rotate", 0);
 					Shape s;
 					try {
-						s = ObjParser.parse(getString(element, "obj"), pos);
+						s = ObjParser
+								.parse(getString(element, "obj"),
+										Transformation.translation(pos)
+												.multiply(Transformation
+														.scale(scale))
+										.multiply(Transformation.rotateY(
+												rotate / 180 * Math.PI)));
 					} catch (FileNotFoundException e) {
 						e.printStackTrace();
 						s = null;
@@ -137,17 +146,20 @@ public class SceneLoader {
 		return new Vector3d(x, y, z);
 	}
 
-	private Vector3d getVector(Element tag, String attribute) {
+	private Vector3d getVector(Element tag, String attribute,
+			Vector3d fallback) {
 		String[] comp = tag.getAttribute(attribute).split(",");
-		if (comp.length != 3)
-			return null;
+		if (comp.length != 1 && comp.length != 3)
+			return fallback;
 		try {
 			double x = Double.parseDouble(comp[0]);
+			if (comp.length == 1)
+				return new Vector3d(x);
 			double y = Double.parseDouble(comp[1]);
 			double z = Double.parseDouble(comp[2]);
 			return new Vector3d(x, y, z);
 		} catch (NumberFormatException e) {
-			return null;
+			return fallback;
 		}
 	}
 
